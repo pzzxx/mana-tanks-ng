@@ -1,0 +1,16 @@
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+    "name": "mana-tanks",
+    "version-string": "1.0.0.0",
+    "dependencies": [
+        "fmt",
+        "spdlog",
+        "nlohmann-json",
+        "directxtk",
+        "directxmath",
+        "rapidcsv",
+        "simpleini",
+        "toml11",
+        "xbyak"
+    ]
+}
