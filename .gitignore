@@ -1,0 +1,22 @@
+# Build output
+build/
+out/
+vcpkg_installed/
+
+# Vendored dependency (full clone — see README for bootstrap)
+extern/CommonLibSSE-NG/
+
+# IDE / editor
+.vs/
+.vscode/
+.idea/
+*.user
+CMakeUserPresets.json
+
+# OS cruft
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Packaged release artifacts
+*.zip
