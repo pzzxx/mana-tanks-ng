@@ -34,6 +34,7 @@ namespace Settings
 	extern float                  morphMax;
 	extern std::vector<MorphEntry> morphs;
 	extern std::vector<MorphEntry> defaultMorphs;
+	extern std::string              morphList;  // selected MorphJsons stem; empty = manual entry
 
 	// Call before SKSEPluginLoad finishes (creates the file if absent).
 	void Load();

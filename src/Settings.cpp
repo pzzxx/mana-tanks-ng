@@ -1,5 +1,7 @@
 #include "Settings.h"
 
+#include <cctype>
+
 namespace Settings
 {
 	std::mutex              lock;
@@ -14,6 +16,7 @@ namespace Settings
 	float                   morphMax = 1.0f;
 	std::vector<MorphEntry> morphs;
 	std::vector<MorphEntry> defaultMorphs;
+	std::string              morphList;
 
 	namespace
 	{
@@ -42,6 +45,7 @@ namespace Settings
 			j["maintInterval"] = Round2(maintInterval);
 			j["linkPool"] = linkPool;
 			j["poolMax"] = poolMax;
+			j["morphList"] = morphList;
 
 			auto& ms = j["morphSizes"];
 			ms["enabled"] = morphsEnabled;
@@ -81,6 +85,16 @@ namespace Settings
 				maintInterval = j.value("maintInterval", maintInterval);
 				linkPool = j.value("linkPool", linkPool);
 				poolMax = j.value("poolMax", poolMax);
+				morphList = j.value("morphList", morphList);
+				if (morphList.size() > 5) {
+					std::string ext = morphList.substr(morphList.size() - 5);
+					for (auto& c : ext) {
+						c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+					}
+					if (ext == ".json") {
+						morphList.resize(morphList.size() - 5);
+					}
+				}
 
 				if (j.contains("morphSizes") && j["morphSizes"].is_object()) {
 					const auto& ms = j["morphSizes"];
