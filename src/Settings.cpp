@@ -7,7 +7,7 @@ namespace Settings
 	std::mutex              lock;
 	bool                    enabled = true;
 	int                     power = 1;
-	float                   updateInterval = 0.15f;
+	float                   updateInterval = 0.25f;
 	float                   maintInterval = 5.0f;
 	bool                    linkPool = true;
 	int                     poolMax = 1000;
@@ -21,6 +21,7 @@ namespace Settings
 	namespace
 	{
 		std::atomic<bool>                     dirty{ false };
+		std::atomic<std::uint64_t>            generation{ 0 };
 		std::chrono::steady_clock::time_point lastEdit;
 
 		std::filesystem::path ConfigPath()
@@ -131,12 +132,14 @@ namespace Settings
 
 		LoadMorphs();
 		SaveUnlocked();
+		generation.fetch_add(1, std::memory_order_relaxed);
 	}
 
 	void MarkDirty()
 	{
 		dirty.store(true);
 		lastEdit = std::chrono::steady_clock::now();
+		generation.fetch_add(1, std::memory_order_relaxed);
 	}
 
 	void FlushIfDue()
@@ -164,5 +167,10 @@ namespace Settings
 		snap.morphMax = morphMax;
 		snap.morphs = morphs;
 		return snap;
+	}
+
+	std::uint64_t Generation()
+	{
+		return generation.load(std::memory_order_relaxed);
 	}
 }

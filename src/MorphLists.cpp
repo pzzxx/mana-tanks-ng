@@ -117,6 +117,16 @@ namespace MorphLists
 
 	void Refresh()
 	{
+		// Called every frame while the Morphs tab is open — the directory
+		// scan is throttled so it runs at most twice a second; new files
+		// still appear promptly.
+		static std::chrono::steady_clock::time_point lastRefresh{};
+		const auto now = std::chrono::steady_clock::now();
+		if (now - lastRefresh < std::chrono::milliseconds(500)) {
+			return;
+		}
+		lastRefresh = now;
+
 		const auto dir = MorphJsonsDir();
 
 		std::vector<std::pair<std::string, std::filesystem::path>> found;
