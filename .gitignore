@@ -20,3 +20,6 @@ $RECYCLE.BIN/
 
 # Packaged release artifacts
 *.zip
+
+# Helper scripts (not part of the plugin source)
+*.py
