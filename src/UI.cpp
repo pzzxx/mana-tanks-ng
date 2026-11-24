@@ -305,7 +305,6 @@ namespace UI
 			static std::vector<std::array<char, BUF_LEN>> nameBufs;
 			static char                                 newNameBuf[BUF_LEN] = {};
 			static float                                newSize = 1.0f;
-			static std::string                          pendingMorph;  // add-row pick in list mode
 
 			const bool  inListMode   = !Settings::morphList.empty();
 			const auto* listEntries  = inListMode ? &MorphLists::GetEntries(Settings::morphList) : nullptr;
@@ -322,7 +321,6 @@ namespace UI
 				if (Selectable("Select a morph list...##empty", Settings::morphList.empty())) {
 					if (!Settings::morphList.empty()) {
 						Settings::morphList.clear();
-						pendingMorph.clear();
 						Settings::MarkDirty();
 					}
 				}
@@ -334,7 +332,6 @@ namespace UI
 					const std::string itemLabel = files[i] + "##" + std::to_string(i);
 					if (Selectable(itemLabel.c_str(), sel) && !sel) {
 						Settings::morphList = files[i];
-						pendingMorph.clear();
 						Settings::MarkDirty();
 					}
 				}
@@ -439,13 +436,18 @@ namespace UI
 				SetNextItemWidth(-FLT_MIN);
 				bool add = false;
 				if (inListMode) {
-					const std::string preview = pendingMorph.empty()
-					    ? "select morph..."
-					    : MorphLists::DisplayNameFor(Settings::morphList, pendingMorph);
+					// Picking a morph commits it immediately — no + button.
 					std::string picked;
-					if (MorphCombo("##name", preview, *listEntries, pendingMorph, picked, &morphs, nullptr) &&
+					if (MorphCombo("##name", "select morph...", *listEntries, "", picked, &morphs, nullptr) &&
 					    !picked.empty()) {
-						pendingMorph = picked;
+						const bool found = std::any_of(listEntries->begin(), listEntries->end(),
+						    [&](const MorphLists::Entry& e) { return e.morph == picked; });
+						const auto dupe = [&](const Settings::MorphEntry& e) { return e.name == picked; };
+						if (found && std::find_if(morphs.begin(), morphs.end(), dupe) == morphs.end()) {
+							morphs.push_back({ picked, newSize });
+							Settings::MarkDirty();
+							newSize = 1.0f;
+						}
 					}
 				} else {
 					add = InputTextWithHint("##name", "new morph name", newNameBuf, BUF_LEN,
@@ -455,29 +457,25 @@ namespace UI
 				SetNextItemWidth(-FLT_MIN);
 				InputFloat("##val", &newSize, 0.0f, 0.0f, "%.2f");
 				TableNextColumn();
-				add = add || SmallButton("+");
+				if (inListMode) {
+					BeginDisabled();
+					SmallButton("+");
+					EndDisabled();
+				} else {
+					add = add || SmallButton("+");
+				}
 				PopID();
 				EndTable();
 
 				if (add) {
-					std::string name;
-					if (inListMode) {
-						// pendingMorph can go stale if the JSON changed since it
-						// was picked — only accept names still in the list.
-						const bool found = std::any_of(listEntries->begin(), listEntries->end(),
-						    [&](const MorphLists::Entry& e) { return e.morph == pendingMorph; });
-						name = found ? pendingMorph : std::string{};
-					} else {
-						name = Trim(newNameBuf);
-					}
-					const auto dupe = [&](const Settings::MorphEntry& e) { return e.name == name; };
+					const std::string name = Trim(newNameBuf);
+					const auto        dupe = [&](const Settings::MorphEntry& e) { return e.name == name; };
 					if (!name.empty() &&
 					    std::find_if(morphs.begin(), morphs.end(), dupe) == morphs.end()) {
 						morphs.push_back({ name, newSize });
 						Settings::MarkDirty();
 					}
 					newNameBuf[0] = '\0';
-					pendingMorph.clear();
 					newSize = 1.0f;
 				}
 			}
