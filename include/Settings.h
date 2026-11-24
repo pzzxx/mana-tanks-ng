@@ -12,7 +12,7 @@ namespace Settings
 	{
 		bool                    enabled = true;
 		RE::ActorValue          power = RE::ActorValue::kMagicka;
-		float                   updateInterval = 0.15f;
+		float                   updateInterval = 0.25f;
 		float                   maintInterval = 5.0f;
 		bool                    linkPool = true;
 		float                   poolMax = 1000.0f;
@@ -48,6 +48,11 @@ namespace Settings
 
 	// Deep copy for the game-thread tick.
 	Snapshot GetSnapshot();
+
+	// Monotonic counter bumped on every settings mutation; the game thread
+	// compares it against a cached value so its per-frame path never has
+	// to take `lock`.
+	[[nodiscard]] std::uint64_t Generation();
 
 	[[nodiscard]] constexpr RE::ActorValue PowerToActorValue(int a_power) noexcept
 	{
